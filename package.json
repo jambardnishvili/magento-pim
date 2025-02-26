@@ -1,0 +1,17 @@
+{
+  "name": "magento-pim",
+  "version": "1.0.0",
+  "description": "Data Grid implementation for Magento 2 configurable/bundle products using AG-Grid React",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "papaparse": "^5.5.2",
+    "tabulator-tables": "^6.3.1"
+  },
+  "devDependencies": {
+    "vite": "^6.2.0"
+  }
+}
