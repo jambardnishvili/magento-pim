@@ -100,16 +100,6 @@ function initializeTable() {
         setupMassActions(table);
         setupColumnVisibility(table);
         
-        // Global filter functionality
-        document.getElementById("filter-value").addEventListener("keyup", function() {
-            table.setFilter(customFilter, {value: this.value});
-        });
-        
-        document.getElementById("filter-clear").addEventListener("click", function() {
-            document.getElementById("filter-value").value = "";
-            table.clearFilter();
-        });
-        
         // Add event listeners for data changes
         table.on("cellEdited", function(cell) {
             const row = cell.getRow();
@@ -131,25 +121,6 @@ function initializeTable() {
         document.getElementById("example-table").innerHTML = 
             `<div class="alert alert-danger m-3">Error initializing table: ${error.message}</div>`;
     }
-}
-
-// Custom filter function to search across all columns
-function customFilter(data, params) {
-    if (!params.value) return true;
-    
-    const searchTerm = params.value.toLowerCase();
-    
-    // Search across all data properties
-    for (let key in data) {
-        if (typeof data[key] === "string" && data[key].toLowerCase().includes(searchTerm)) {
-            return true;
-        }
-        if (typeof data[key] === "number" && data[key].toString().includes(searchTerm)) {
-            return true;
-        }
-    }
-    
-    return false;
 }
 
 // Initialize tooltips if Bootstrap is available

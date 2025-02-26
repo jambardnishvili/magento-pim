@@ -118,7 +118,6 @@ function importMagentoProductData(data, table) {
 
 // Transform Magento CSV data to hierarchical structure for Tabulator
 function transformMagentoDataToTabulator(data) {
-    debugger;
     console.log("Converting Magento data format:", data.length, "rows");
     if (!data || data.length === 0) return [];
     
