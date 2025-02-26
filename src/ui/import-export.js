@@ -14,12 +14,6 @@ export function setupImportExport(table) {
         });
     });
 
-    document.getElementById("export-json").addEventListener("click", function() {
-        table.download("json", "magento_products.json", {
-            bom: true
-        });
-    });
-
     // Add import functionality
     document.getElementById("import-data").addEventListener("click", function() {
         document.getElementById("import-file").click();
@@ -33,15 +27,11 @@ export function setupImportExport(table) {
         reader.onload = function(e) {
             try {
                 const fileExt = file.name.split(".").pop().toLowerCase();
-                let data;
-                
-                if (fileExt === "json") {
-                    data = JSON.parse(e.target.result);
-                    importProductData(data, table);
-                } else if (fileExt === "csv") {
+
+                if (fileExt === "csv") {
                     Papa.parse(e.target.result, {
                         header: true,
-                        dynamicTyping: true,
+                        dynamicTyping: false,
                         skipEmptyLines: true,
                         complete: function(results) {
                             if (results.errors && results.errors.length > 0) {
@@ -62,7 +52,7 @@ export function setupImportExport(table) {
                         }
                     });
                 } else {
-                    alert("Unsupported file format. Please use .csv or .json files.");
+                    alert("Unsupported file format. Please use .csv");
                 }
             } catch (error) {
                 alert("Error importing data: " + error.message);
@@ -146,10 +136,7 @@ function transformMagentoDataToTabulator(data) {
         if (!item.sku) return false;
         
         // Need at least name or product_type or status
-        const hasNameOrTypeOrStatus = 
-            (item.name || item.product_name);
-            
-        return hasNameOrTypeOrStatus;
+        return (item.name || item.product_name);
     };
     
     // First pass: build a map of SKUs to products for quick lookup

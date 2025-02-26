@@ -299,10 +299,6 @@ document.getElementById("export-csv").addEventListener("click", function() {
     table.download("csv", "magento_products.csv");
 });
 
-document.getElementById("export-json").addEventListener("click", function() {
-    table.download("json", "magento_products.json");
-});
-
 document.getElementById("import-data").addEventListener("click", function() {
     document.getElementById("import-file").click();
 });
