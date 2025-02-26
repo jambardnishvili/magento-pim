@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "Data Grid implementation for Magento 2 configurable/bundle products using AG-Grid React",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "papaparse": "^5.5.2",

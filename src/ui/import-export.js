@@ -44,7 +44,7 @@ export function setupImportExport(table) {
                                 console.log(`CSV contains ${results.data.length} rows`);
                                 importMagentoProductData(results.data, table);
                             } else {
-                                importProductData(results.data, table);
+                                alert("CSV is not in the correct format")
                             }
                         },
                         error: function(error) {
@@ -72,7 +72,7 @@ function detectMagentoFormat(data) {
     if (!data || data.length === 0) return false;
     
     // Check for common Magento product export fields
-    const magentoFields = ["sku", "product_type", "configurable_variations", "visibility", "tax_class_name"];
+    const magentoFields = ["sku", "product_type", "configurable_variations", "visibility"];
     const keys = Object.keys(data[0]);
     
     return magentoFields.some(field => keys.includes(field));
@@ -118,6 +118,7 @@ function importMagentoProductData(data, table) {
 
 // Transform Magento CSV data to hierarchical structure for Tabulator
 function transformMagentoDataToTabulator(data) {
+    debugger;
     console.log("Converting Magento data format:", data.length, "rows");
     if (!data || data.length === 0) return [];
     

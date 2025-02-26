@@ -31,43 +31,6 @@ export const columnDefinitions = [
         }
     },
     {
-        title: "Color",
-        field: "color",
-        editor: "list",
-        editorParams: {
-            values: ["Black", "White", "Red", "Blue"]
-        },
-        headerFilter: "list",
-        headerFilterParams: {
-            values: ["Black", "White", "Red", "Blue"]
-        }
-    },
-    {
-        title: "Size",
-        field: "size",
-        editor: "list",
-        editorParams: {
-            values: ["XS", "S", "M", "L", "XL"]
-        },
-        headerFilter: "list",
-        headerFilterParams: {
-            values: ["XS", "S", "M", "L", "XL"]
-        }
-    },
-    {
-        title: "Option",
-        field: "option_title",
-        editor: "input",
-        headerFilter: "input"
-    },
-    {
-        title: "Required",
-        field: "is_required",
-        editor: "tickCross",
-        formatter: "tickCross",
-        hozAlign: "center"
-    },
-    {
         title: "Price",
         field: "price",
         editor: "number",

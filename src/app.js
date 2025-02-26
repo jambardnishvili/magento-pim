@@ -4,9 +4,7 @@
  * This file initializes the Tabulator instance and imports all necessary modules.
  */
 import { TabulatorFull as Tabulator } from 'tabulator-tables';
-import { ProductVariationsModule } from './modules/ProductVariationsModule.js';
 import { columnDefinitions } from './config/column-config.js';
-import { sampleData } from './data/sample-data.js';
 import { setupEventHandlers } from './ui/event-handlers.js';
 import { setupImportExport } from './ui/import-export.js';
 import { setupMassActions } from './ui/mass-actions.js';
@@ -19,39 +17,17 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeTable() {
-    // Debug: Log sample data to ensure it's available
-    console.log("Sample data for table:", sampleData);
-    
-    if (!sampleData || !Array.isArray(sampleData) || sampleData.length === 0) {
-        console.error("No data available for table initialization!");
-        document.getElementById("example-table").innerHTML = 
-            '<div class="alert alert-warning m-3">No product data available. Please add products or import data.</div>';
-        return;
-    }
-    
-    // Register our custom module
-    Tabulator.registerModule(ProductVariationsModule);
-    
     // Configure table options - using only known supported options
     const tableOptions = {
-        data: sampleData,
+        data: [],
         dataTree: true,
         dataTreeStartExpanded: false,
         dataTreeSelectPropagate: true,
         height: "500px",
         layout: "fitDataFill",
         movableColumns: true,
-        
-        // Remove the problematic 'selectable' option
-        // Row selection is already handled by rowHeader formatter
-        
-        // Add a persistent row ID for better data handling
         index: "id",
-        
-        // Debug mode to help with issues
         debugInvalidOptions: true,
-        
-        // Use row header for selection instead of a regular column
         rowHeader: {
             formatter: "rowSelection",
             titleFormatter: "rowSelection",
@@ -62,11 +38,7 @@ function initializeTable() {
             width: 60,
             cssClass: "row-selection-column"
         },
-        
-        // Define regular columns
         columns: columnDefinitions,
-        
-        // Context menu for additional functionality
         rowContextMenu: [
             {
                 label: "Add Child Product",
