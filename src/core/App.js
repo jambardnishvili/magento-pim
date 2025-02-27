@@ -68,62 +68,53 @@ export class App {
             ]
         };
         
+        // Modules
         this.productTable = null;
-        this.appContainer = document.getElementById('app-container');
-        this.errorContainer = document.getElementById('error-container');
+        this.importExport = null;
+        this.massActions = null;
+        this.columnManager = null;
+        this.eventManager = null;
+        this.supabaseModule = null;
     }
     
     /**
      * Initialize the application
      */
-    async init() {
+    init() {
+        console.log("Initializing application...");
+        
         try {
-            console.log("Initializing application...");
-            
-            // Create connection to database first
-            const supabaseModule = new SupabaseModule(null); // No productTable yet
-            const connectionResult = await supabaseModule.testConnection();
-            
-            if (!connectionResult.success) {
-                this._showFatalError(connectionResult.message || "Failed to connect to database");
-                return false;
-            }
-            
-            // Only proceed with application initialization if database connection works
-            this._showAppInterface();
-            
-            // Create product table
+            // Create and initialize the ProductTable
             this.productTable = new ProductTable("#example-table", this.tableOptions);
+            this.productTable.init();
             
-            // Initialize modules (with the properly tested supabaseModule)
-            supabaseModule.setProductTable(this.productTable);
-            this._initModules(supabaseModule);
+            // Initialize modules
+            this._initModules();
             
-            // Add event listeners after everything is ready
-            this._setupSearch();
+            // Setup global search
+            this.productTable.setupSearch("#search-input");
+            
+            // Setup clear filters button
             this._setupClearFilters();
             
             console.log("Application initialized successfully");
-            return true;
         } catch (error) {
             console.error("Error initializing application:", error);
-            this._showFatalError(error.message || "Failed to initialize application");
-            return false;
+            throw error;
         }
     }
     
     /**
      * Initialize all application modules
      * @private
-     * @param {SupabaseModule} supabaseModule - Pre-initialized Supabase module
      */
-    _initModules(supabaseModule) {
+    _initModules() {
         // Create module instances
         this.importExport = new ImportExport(this.productTable);
         this.massActions = new MassActions(this.productTable);
         this.columnManager = new ColumnManager(this.productTable);
         this.eventManager = new EventManager(this.productTable);
-        this.supabaseModule = supabaseModule;
+        this.supabaseModule = new SupabaseModule(this.productTable);
         
         // Register modules with ProductTable
         this.productTable
@@ -133,75 +124,6 @@ export class App {
             .registerModule(this.eventManager)
             .registerModule(this.supabaseModule)
             .initModules();
-    }
-    
-    /**
-     * Display a fatal error that prevents app usage
-     * @private
-     * @param {string} message - Error message to display
-     */
-    _showFatalError(message) {
-        console.error("FATAL ERROR:", message);
-        
-        // Hide app container
-        if (this.appContainer) {
-            this.appContainer.style.display = 'none';
-        }
-        
-        // Show error container with message
-        if (!this.errorContainer) {
-            // Create error container if it doesn't exist
-            this.errorContainer = document.createElement('div');
-            this.errorContainer.id = 'error-container';
-            this.errorContainer.className = 'container-fluid mt-5 text-center';
-            document.body.appendChild(this.errorContainer);
-        }
-        
-        this.errorContainer.innerHTML = `
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <div class="card border-danger">
-                        <div class="card-header bg-danger text-white">
-                            <h3><i class="bi bi-exclamation-triangle"></i> Database Connection Error</h3>
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text fs-5">${message}</p>
-                            <p class="card-text mt-3">Please check your database configuration and refresh the page.</p>
-                            <button id="refresh-btn" class="btn btn-primary mt-3">
-                                <i class="bi bi-arrow-clockwise"></i> Retry Connection
-                            </button>
-                        </div>
-                        <div class="card-footer text-muted">
-                            <small>If the problem persists, please contact support.</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        this.errorContainer.style.display = 'block';
-        
-        // Add refresh button functionality
-        const refreshBtn = document.getElementById('refresh-btn');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => {
-                window.location.reload();
-            });
-        }
-    }
-    
-    /**
-     * Show the main application interface
-     * @private
-     */
-    _showAppInterface() {
-        if (this.errorContainer) {
-            this.errorContainer.style.display = 'none';
-        }
-        
-        if (this.appContainer) {
-            this.appContainer.style.display = 'block';
-        }
     }
     
     /**
