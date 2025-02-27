@@ -1,0 +1,62 @@
+/* Main application styles */
+
+/* General styling */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Error container styling */
+#error-container .card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 50px;
+}
+
+#error-container .card-header {
+    font-weight: bold;
+}
+
+/* Tabulator customizations */
+.tabulator .tabulator-header .tabulator-col.price-column {
+    text-align: right;
+}
+
+.tabulator-row .tabulator-cell.price-column {
+    text-align: right;
+}
+
+/* Status badges */
+.badge {
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-weight: normal;
+}
+
+/* Selection column styling */
+.row-selection-column {
+    background-color: #f8f9fa;
+}
+
+/* Column visibility dropdown */
+#column-popup label {
+    display: block;
+    padding: 5px;
+    margin-bottom: 2px;
+}
+
+#column-popup label:hover {
+    background-color: #f8f9fa;
+}
+
+/* Database status indicator */
+#db-status {
+    min-width: 140px;
+}
+
+/* Mass actions dropdown */
+#mass-popup .dropdown-item {
+    cursor: pointer;
+}
+
+#mass-popup .dropdown-item.text-danger:hover {
+    background-color: #f8d7da;
+} 

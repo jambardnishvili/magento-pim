@@ -44,13 +44,26 @@ export class SupabaseModule extends BaseModule {
     }
     
     /**
-     * Initialize Supabase client
+     * Initialize Supabase client and test connection
      * @private
      */
-    _initClient() {
+    async _initClient() {
         try {
+            // Remove debugger statement
             this.supabase = createClient(this.supabaseUrl, this.supabaseKey);
-            console.log("Supabase client initialized");
+            console.log("Supabase client created");
+            
+            // Test the connection with a simple query
+            console.log("Testing Supabase connection...");
+            const { data, error, status } = await this.supabase
+                .from(this.tableName)
+                .select('count()', { count: 'exact', head: true });
+                
+            if (error) {
+                throw new Error(`Connection test failed: ${error.message}`);
+            }
+            
+            console.log(`Supabase connection successful. Status: ${status}`);
             this.isConnected = true;
             
             // Update database status indicator
@@ -61,12 +74,18 @@ export class SupabaseModule extends BaseModule {
                 dbStatusText.textContent = "Connected";
                 dbStatusBtn.classList.remove("btn-outline-secondary");
                 dbStatusBtn.classList.add("btn-success");
+                
+                // Add product count if available
+                if (data) {
+                    const count = data[0]?.count || 0;
+                    dbStatusText.textContent = `Connected (${count} products)`;
+                }
             }
             
             // Load initial data
             this.loadData();
         } catch (error) {
-            console.error("Error initializing Supabase client:", error);
+            console.error("Error initializing Supabase connection:", error);
             this.isConnected = false;
             
             // Update database status indicator
@@ -74,9 +93,11 @@ export class SupabaseModule extends BaseModule {
             const dbStatusBtn = document.getElementById("db-status");
             
             if (dbStatusText && dbStatusBtn) {
-                dbStatusText.textContent = "Connection Failed";
+                dbStatusText.textContent = `Connection Failed: ${error.message}`;
                 dbStatusBtn.classList.remove("btn-outline-secondary");
                 dbStatusBtn.classList.add("btn-danger");
+                // Add title for hover tooltip with full error
+                dbStatusBtn.title = `Error: ${error.message}`;
             }
         }
     }
@@ -370,6 +391,65 @@ export class SupabaseModule extends BaseModule {
             return false;
         } finally {
             this.isSyncing = false;
+        }
+    }
+
+    /**
+     * Set product table reference (needed when initialized before the table)
+     * @param {ProductTable} productTable - The product table instance
+     */
+    setProductTable(productTable) {
+        this.productTable = productTable;
+        // Update table reference
+        this.table = productTable ? productTable.getTable() : null;
+    }
+
+    /**
+     * Test the Supabase connection without initializing the whole module
+     * @returns {Promise<Object>} Result object with success flag and message
+     */
+    async testConnection() {
+        try {
+            // Get configuration
+            this.supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            this.supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+            
+            if (!this.supabaseUrl || !this.supabaseKey) {
+                return {
+                    success: false,
+                    message: "Database configuration missing. Please check your environment variables."
+                };
+            }
+            
+            // Create Supabase client
+            this.supabase = createClient(this.supabaseUrl, this.supabaseKey);
+            
+            // Test the connection with a simple query
+            console.log("Testing Supabase connection...");
+            const { data, error, status } = await this.supabase
+                .from(this.tableName)
+                .select('count()', { count: 'exact', head: true });
+                
+            if (error) {
+                throw new Error(`Connection test failed: ${error.message}`);
+            }
+            
+            console.log(`Supabase connection successful. Status: ${status}`);
+            this.isConnected = true;
+            
+            return {
+                success: true,
+                message: "Database connection successful",
+                count: data?.[0]?.count || 0
+            };
+        } catch (error) {
+            console.error("Supabase connection error:", error);
+            this.isConnected = false;
+            
+            return {
+                success: false,
+                message: `Database connection failed: ${error.message}`
+            };
         }
     }
 } 
