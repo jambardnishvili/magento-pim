@@ -1,7 +1,5 @@
 /**
  * Column definitions for the Tabulator table
- * 
- * This file contains all the column configuration for the Magento product grid.
  */
 export const columnDefinitions = [
     {
@@ -56,12 +54,12 @@ export const columnDefinitions = [
             
             // Apply conditional formatting
             if (value <= 0) {
-                element.style.color = "#dc3545"; // Red for out of stock (Bootstrap danger)
+                element.style.color = "#dc3545"; // Red for out of stock
                 element.style.fontWeight = "bold";
             } else if (value < 10) {
-                element.style.color = "#fd7e14"; // Orange for low stock (Bootstrap warning)
+                element.style.color = "#fd7e14"; // Orange for low stock
             } else {
-                element.style.color = "#198754"; // Green for good stock (Bootstrap success)
+                element.style.color = "#198754"; // Green for good stock
             }
             
             return value;
