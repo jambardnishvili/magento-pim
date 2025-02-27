@@ -6,6 +6,7 @@ import { ImportExport } from '../modules/ImportExport.js';
 import { MassActions } from '../modules/MassActions.js';
 import { ColumnManager } from '../modules/ColumnManager.js';
 import { EventManager } from '../modules/EventManager.js';
+import { SupabaseModule } from '../modules/SupabaseModule.js';
 import { columnDefinitions } from '../config/ColumnConfig.js';
 
 export class App {
@@ -73,6 +74,7 @@ export class App {
         this.massActions = null;
         this.columnManager = null;
         this.eventManager = null;
+        this.supabaseModule = null;
     }
     
     /**
@@ -112,6 +114,7 @@ export class App {
         this.massActions = new MassActions(this.productTable);
         this.columnManager = new ColumnManager(this.productTable);
         this.eventManager = new EventManager(this.productTable);
+        this.supabaseModule = new SupabaseModule(this.productTable);
         
         // Register modules with ProductTable
         this.productTable
@@ -119,6 +122,7 @@ export class App {
             .registerModule(this.massActions)
             .registerModule(this.columnManager)
             .registerModule(this.eventManager)
+            .registerModule(this.supabaseModule)
             .initModules();
     }
     

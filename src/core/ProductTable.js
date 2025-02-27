@@ -39,14 +39,21 @@ export class ProductTable {
     }
     
     /**
-     * Register a module with the ProductTable
-     * @param {BaseModule} module - Module instance to register
+     * Register a module with the table
+     * @param {BaseModule} module - Module to register
+     * @returns {ProductTable} This instance for chaining
      */
     registerModule(module) {
-        this.modules.push(module);
-        if (this.table) {
-            module.init();
+        if (!module) {
+            console.warn("Attempted to register null or undefined module");
+            return this;
         }
+        
+        // Get module name from its constructor
+        const moduleName = module.constructor.name;
+        console.log(`Registering module: ${moduleName}`);
+        
+        this.modules.push(module);
         return this;
     }
     
@@ -133,5 +140,26 @@ export class ProductTable {
         }
         
         return false;
+    }
+    
+    /**
+     * Get a module by name
+     * @param {string} moduleName - Name of the module to retrieve
+     * @returns {Object|null} The module instance or null if not found
+     */
+    getModuleByName(moduleName) {
+        // Try to find the module by its class name
+        for (const module of this.modules) {
+            // Get the class name from the constructor
+            const className = module.constructor.name;
+            
+            // Check if the class name matches
+            if (className === moduleName) {
+                return module;
+            }
+        }
+        
+        console.warn(`Module "${moduleName}" not found`);
+        return null;
     }
 } 

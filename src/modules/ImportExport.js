@@ -8,6 +8,7 @@ import { transformMagentoData } from '../utils/DataTransformer.js';
 export class ImportExport extends BaseModule {
     constructor(productTable) {
         super(productTable);
+        this.supabaseModule = null; // Reference to the SupabaseModule
     }
     
     /**
@@ -15,6 +16,9 @@ export class ImportExport extends BaseModule {
      */
     init() {
         if (this.initialized) return;
+        
+        // Get reference to the SupabaseModule
+        this.supabaseModule = this.productTable.getModuleByName('SupabaseModule');
         
         // Setup export functionality
         this._setupExport();
@@ -194,7 +198,7 @@ export class ImportExport extends BaseModule {
     }
     
     /**
-     * Import processed data into the table
+     * Import processed data into the table and database
      * @private
      * @param {Array} data - Processed data ready for import
      */
@@ -207,6 +211,18 @@ export class ImportExport extends BaseModule {
                 this.table.redraw(true);
                 console.log("Table redrawn after import");
             }, 100);
+            
+            // If Supabase module is available, perform bulk import
+            if (this.supabaseModule && this.supabaseModule.isConnected) {
+                this.supabaseModule.bulkImport(data)
+                    .then(success => {
+                        if (success) {
+                            console.log("Data successfully imported to database");
+                        } else {
+                            console.warn("Database import completed with errors");
+                        }
+                    });
+            }
             
             alert(`Data imported successfully! ${data.length} products loaded.`);
         })
