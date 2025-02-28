@@ -2,46 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magento PIM</title>
-    <!-- Load Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Load Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <!-- Load Tabulator CSS -->
-    <link href="https://unpkg.com/tabulator-tables@5.4.4/dist/css/tabulator.min.css" rel="stylesheet">
-    <!-- Load configuration before app scripts - try both paths -->
-    <script>
-        // Dynamically load the config.js file from the correct location
-        (function() {
-            function loadConfig(path, onSuccess, onError) {
-                const script = document.createElement('script');
-                script.src = path;
-                script.onload = onSuccess;
-                script.onerror = onError;
-                document.head.appendChild(script);
-            }
-
-            // First try to load from ./config.js (GitHub Pages build path)
-            loadConfig('./config.js', 
-                () => console.log('Loaded config from ./config.js'),
-                () => {
-                    console.log('Falling back to ./public/config.js');
-                    // If that fails, try to load from ./public/config.js (local dev path)
-                    loadConfig('./public/config.js',
-                        () => console.log('Loaded config from ./public/config.js'),
-                        () => {
-                            console.error('Failed to load config.js from either location');
-                            // Set default values to prevent errors
-                            window.SUPABASE_URL = null;
-                            window.SUPABASE_ANON_KEY = null;
-                            window.ENABLE_SUPABASE = false;
-                        }
-                    );
-                }
-            );
-        })();
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Magento PIM - Product Management</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Tabulator CSS with Bootstrap theme -->
+    <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
     <style>
         .tabulator {
             font-size: 14px;
@@ -84,158 +50,82 @@
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <header class="mb-4 mt-3">
-            <div class="row align-items-center">
-                <div class="col">
-                    <h1>Magento PIM</h1>
-                    <p class="lead mb-0">Product Information Management</p>
-                </div>
-                <div class="col-auto">
-                    <div class="btn-group" role="group" aria-label="Database status">
-                        <button type="button" id="db-status" class="btn btn-outline-secondary" disabled>
-                            <i class="bi bi-database"></i>
+    <div class="container-fluid mt-3">
+        <div class="row mb-3">
+            <div class="col">
+                <div class="btn-toolbar" role="toolbar">
+                    <div class="btn-group me-2" role="group">
+                        <button id="add-configurable" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Add Configurable</button>
+                        <button id="add-bundle" class="btn btn-outline-primary"><i class="bi bi-plus-circle"></i> Add Bundle</button>
+                    </div>
+                    
+                    <div class="btn-group me-2" role="group">
+                        <div class="dropdown">
+                            <button id="mass-actions" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                Mass Actions
+                            </button>
+                            <div id="mass-popup" class="dropdown-menu">
+                                <button id="mass-enable" class="dropdown-item">Enable Selected</button>
+                                <button id="mass-disable" class="dropdown-item">Disable Selected</button>
+                                <div class="dropdown-divider"></div>
+                                <button id="mass-delete" class="dropdown-item text-danger">Delete Selected</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="btn-group me-2" role="group">
+                        <div class="dropdown" id="column-selector">
+                            <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="bi bi-columns"></i> Columns
+                            </button>
+                            <div id="column-popup" class="dropdown-menu p-2" style="min-width:200px;">
+                                <!-- Column checkboxes will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="btn-group me-2" role="group">
+                        <button id="import-data" class="btn btn-outline-success">
+                            <i class="bi bi-upload"></i> Import
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" disabled>
-                            <span id="db-status-text">Not Connected</span>
+                        <input type="file" id="import-file" accept=".csv" style="display:none;">
+                        <button id="export-csv" class="btn btn-outline-primary">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                    </div>
+                    
+                    <div class="btn-group ms-2" role="group">
+                        <button id="db-status" class="btn btn-outline-secondary" disabled>
+                            <i class="bi bi-database"></i> <span id="db-status-text">Offline</span>
                         </button>
                     </div>
                 </div>
             </div>
-        </header>
-        
-        <div class="row mb-3">
-            <div class="col">
+            
+            <div class="col-md-3">
                 <div class="input-group">
-                    <input type="text" class="form-control" id="search-input" placeholder="Search products...">
-                    <button class="btn btn-outline-secondary" type="button" id="clear-filters">Clear Filters</button>
-                </div>
-            </div>
-            <div class="col-auto">
-                <div class="btn-group" role="group" aria-label="Import/Export">
-                    <button type="button" class="btn btn-primary" id="import-data">
-                        <i class="bi bi-upload"></i> Import
-                    </button>
-                    <button type="button" class="btn btn-outline-primary" id="export-csv">
-                        <i class="bi bi-download"></i> Export
+                    <input type="text" id="search-input" class="form-control" placeholder="Search...">
+                    <button id="clear-filters" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Clear
                     </button>
                 </div>
-                <input type="file" id="import-file" accept=".csv" style="display: none;">
             </div>
         </div>
-        
-        <div class="mb-3">
-            <!-- The table will be initialized here -->
-            <div id="example-table"></div>
-        </div>
+
+        <div id="example-table"></div>
     </div>
     
-    <!-- Load dependencies from CDN as fallback -->
-    <script>
-        // Flag to track if we've detected module errors and if the app has been initialized
-        window.moduleLoadError = false;
-        window.appInitialized = false;
-        
-        // Listen for module resolution errors
-        window.addEventListener('error', function(event) {
-            if (event.message && event.message.includes('Failed to resolve module specifier')) {
-                if (!window.moduleLoadError) {
-                    window.moduleLoadError = true;
-                    console.warn('Module resolution error detected, will use CDN fallback');
-                    // Start loading fallbacks immediately
-                    loadFallbackLibraries();
-                }
-                
-                // Prevent error alert for module resolution errors
-                event.preventDefault();
-            }
-        }, true); // Use capture to get the event first
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-        // Function to load all required libraries from CDN
-        function loadFallbackLibraries() {
-            console.log('Loading libraries from CDN fallback...');
-            
-            // Queue of scripts to load in sequence
-            const scripts = [
-                { src: 'https://unpkg.com/papaparse@5.4.1/papaparse.min.js', global: 'Papa' },
-                { src: 'https://unpkg.com/tabulator-tables@5.4.4/dist/js/tabulator.min.js', global: 'Tabulator' },
-                { src: 'https://unpkg.com/@supabase/supabase-js@2.21.0/dist/umd/supabase.min.js', global: 'supabase' }
-            ];
-            
-            let loadedCount = 0;
-            
-            // Load scripts in sequence
-            function loadNextScript(index) {
-                if (index >= scripts.length) {
-                    console.log('All CDN libraries loaded successfully');
-                    
-                    // Make Tabulator available as TabulatorFull (the name used in the code)
-                    if (window.Tabulator) {
-                        window.TabulatorFull = window.Tabulator;
-                    }
-                    
-                    // Initialize the app after a small delay to ensure everything is ready
-                    setTimeout(() => {
-                        if (typeof window.initializeApp === 'function') {
-                            window.appInitialized = true;
-                            window.initializeApp();
-                        } else {
-                            console.error('initializeApp function not found, loading app script directly');
-                            const appScript = document.createElement('script');
-                            appScript.type = 'module';
-                            appScript.src = './src/index.js';
-                            document.body.appendChild(appScript);
-                        }
-                    }, 100);
-                    
-                    return;
-                }
-                
-                const script = document.createElement('script');
-                script.src = scripts[index].src;
-                
-                script.onload = function() {
-                    const globalName = scripts[index].global;
-                    console.log(`Loaded ${globalName} from CDN`);
-                    loadedCount++;
-                    
-                    // Continue with next script
-                    loadNextScript(index + 1);
-                };
-                
-                script.onerror = function() {
-                    console.error(`Failed to load ${scripts[index].global} from CDN`);
-                    // Try to continue with next script anyway
-                    loadNextScript(index + 1);
-                };
-                
-                document.head.appendChild(script);
-            }
-            
-            // Start loading the first script
-            loadNextScript(0);
-        }
-    </script>
-    
-    <!-- Load Bootstrap bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Load app entry point -->
-    <script type="module" src="./src/index.js"></script>
+    <!-- Application Scripts -->
+    <script type="module" src="src/index.js"></script>
     
     <!-- Error handling -->
     <script>
         window.addEventListener('error', function(event) {
-            // Ignore module resolution errors for alerts
-            if (event.error && event.error.message && 
-                !event.error.message.includes('Failed to resolve module specifier')) {
-                console.error('Script error detected:', event.error);
-                console.error('Error message:', event.error.message);
-                
-                if (!document.querySelector('.alert-danger')) {
-                    alert('Error loading application: ' + event.error.message);
-                }
-            }
+            console.error('Script error detected:', event.error);
+            alert('Error loading application: ' + event.error.message);
         });
     </script>
 </body>

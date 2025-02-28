@@ -2,40 +2,7 @@
  * Supabase Database Module for data persistence
  */
 import { BaseModule } from '../core/BaseModule.js';
-
-// Try to import Supabase but have a fallback mechanism
-let createClient;
-
-try {
-    // First try to import from the module
-    const module = await import('@supabase/supabase-js');
-    createClient = module.createClient;
-} catch (e) {
-    console.warn('Error importing Supabase as module:', e);
-    
-    // Fallback to window global Supabase if available (loaded from CDN)
-    if (window.supabase && window.supabase.createClient) {
-        console.log('Using global Supabase from CDN');
-        createClient = window.supabase.createClient;
-    } else {
-        console.error('Supabase not available as module or global!');
-        // Create a placeholder function that will not break the app
-        createClient = function() {
-            console.error('Supabase client creation failed - using mock client');
-            // Return a mock client that can be used without breaking the app
-            return {
-                from: () => ({
-                    select: () => Promise.resolve({ data: [], error: null }),
-                    insert: () => Promise.resolve({ data: null, error: { message: 'Supabase not available' } }),
-                    update: () => Promise.resolve({ data: null, error: { message: 'Supabase not available' } }),
-                    delete: () => Promise.resolve({ data: null, error: { message: 'Supabase not available' } }),
-                    upsert: () => Promise.resolve({ data: null, error: { message: 'Supabase not available' } }),
-                    eq: () => ({ select: () => Promise.resolve({ data: [], error: null }) })
-                })
-            };
-        };
-    }
-}
+import { createClient } from '@supabase/supabase-js';
 
 export class SupabaseModule extends BaseModule {
     constructor(productTable) {
@@ -58,25 +25,12 @@ export class SupabaseModule extends BaseModule {
     init() {
         if (this.initialized) return;
         
-        // Check if Supabase is enabled
-        if (typeof window.ENABLE_SUPABASE !== 'undefined' && window.ENABLE_SUPABASE === false) {
-            console.log("Supabase connection disabled by configuration");
-            this._updateConnectionStatus(false, "Disabled");
-            this.initialized = true;
-            return;
-        }
-        
-        // Safe access to environment variables
-        const env = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
-        
-        // Get configuration from environment, window globals, or settings
-        this.supabaseUrl = (env.VITE_SUPABASE_URL) || window.SUPABASE_URL;
-        this.supabaseKey = (env.VITE_SUPABASE_ANON_KEY) || window.SUPABASE_ANON_KEY;
+        // Get configuration from environment or settings
+        this.supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        this.supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
         
         if (!this.supabaseUrl || !this.supabaseKey) {
-            console.error("Supabase configuration missing. Make sure to set SUPABASE_URL and SUPABASE_ANON_KEY in your configuration.");
-            this._updateConnectionStatus(false, "Configuration Missing");
-            this.initialized = true;
+            console.error("Supabase configuration missing. Make sure to set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.");
             return;
         }
         
@@ -100,7 +54,14 @@ export class SupabaseModule extends BaseModule {
             this.isConnected = true;
             
             // Update database status indicator
-            this._updateConnectionStatus(true, "Connected");
+            const dbStatusText = document.getElementById("db-status-text");
+            const dbStatusBtn = document.getElementById("db-status");
+            
+            if (dbStatusText && dbStatusBtn) {
+                dbStatusText.textContent = "Connected";
+                dbStatusBtn.classList.remove("btn-outline-secondary");
+                dbStatusBtn.classList.add("btn-success");
+            }
             
             // Load initial data
             this.loadData();
@@ -109,24 +70,14 @@ export class SupabaseModule extends BaseModule {
             this.isConnected = false;
             
             // Update database status indicator
-            this._updateConnectionStatus(false, "Connection Failed");
-        }
-    }
-    
-    /**
-     * Update connection status UI
-     * @private
-     * @param {boolean} connected - Connection status
-     * @param {string} message - Status message to display
-     */
-    _updateConnectionStatus(connected, message) {
-        const dbStatusText = document.getElementById("db-status-text");
-        const dbStatusBtn = document.getElementById("db-status");
-        
-        if (dbStatusText && dbStatusBtn) {
-            dbStatusText.textContent = message;
-            dbStatusBtn.classList.remove("btn-outline-secondary", "btn-success", "btn-danger");
-            dbStatusBtn.classList.add(connected ? "btn-success" : "btn-danger");
+            const dbStatusText = document.getElementById("db-status-text");
+            const dbStatusBtn = document.getElementById("db-status");
+            
+            if (dbStatusText && dbStatusBtn) {
+                dbStatusText.textContent = "Connection Failed";
+                dbStatusBtn.classList.remove("btn-outline-secondary");
+                dbStatusBtn.classList.add("btn-danger");
+            }
         }
     }
     
