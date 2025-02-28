@@ -8,11 +8,22 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 main: 'index.html'
+            },
+            output: {
+                manualChunks: {
+                    vendor: ['@supabase/supabase-js', 'papaparse', 'tabulator-tables']
+                }
             }
         },
-        sourcemap: true
+        sourcemap: true,
+        commonjsOptions: {
+            include: [/node_modules/]
+        }
     },
     server: {
         open: true
+    },
+    resolve: {
+        dedupe: ['tabulator-tables', '@supabase/supabase-js', 'papaparse']
     }
 })

@@ -2,7 +2,40 @@
  * Supabase Database Module for data persistence
  */
 import { BaseModule } from '../core/BaseModule.js';
-import { createClient } from '@supabase/supabase-js';
+
+// Try to import Supabase but have a fallback mechanism
+let createClient;
+
+try {
+    // First try to import from the module
+    const module = await import('@supabase/supabase-js');
+    createClient = module.createClient;
+} catch (e) {
+    console.warn('Error importing Supabase as module:', e);
+    
+    // Fallback to window global Supabase if available (loaded from CDN)
+    if (window.supabase && window.supabase.createClient) {
+        console.log('Using global Supabase from CDN');
+        createClient = window.supabase.createClient;
+    } else {
+        console.error('Supabase not available as module or global!');
+        // Create a placeholder function that will not break the app
+        createClient = function() {
+            console.error('Supabase client creation failed - using mock client');
+            // Return a mock client that can be used without breaking the app
+            return {
+                from: () => ({
+                    select: () => Promise.resolve({ data: [], error: null }),
+                    insert: () => Promise.resolve({ data: null, error: { message: 'Supabase not available' } }),
+                    update: () => Promise.resolve({ data: null, error: { message: 'Supabase not available' } }),
+                    delete: () => Promise.resolve({ data: null, error: { message: 'Supabase not available' } }),
+                    upsert: () => Promise.resolve({ data: null, error: { message: 'Supabase not available' } }),
+                    eq: () => ({ select: () => Promise.resolve({ data: [], error: null }) })
+                })
+            };
+        };
+    }
+}
 
 export class SupabaseModule extends BaseModule {
     constructor(productTable) {
@@ -25,6 +58,14 @@ export class SupabaseModule extends BaseModule {
     init() {
         if (this.initialized) return;
         
+        // Check if Supabase is enabled
+        if (typeof window.ENABLE_SUPABASE !== 'undefined' && window.ENABLE_SUPABASE === false) {
+            console.log("Supabase connection disabled by configuration");
+            this._updateConnectionStatus(false, "Disabled");
+            this.initialized = true;
+            return;
+        }
+        
         // Get configuration from environment, window globals, or settings
         this.supabaseUrl = import.meta.env.VITE_SUPABASE_URL || window.SUPABASE_URL;
         this.supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY;
@@ -32,6 +73,7 @@ export class SupabaseModule extends BaseModule {
         if (!this.supabaseUrl || !this.supabaseKey) {
             console.error("Supabase configuration missing. Make sure to set SUPABASE_URL and SUPABASE_ANON_KEY in your configuration.");
             this._updateConnectionStatus(false, "Configuration Missing");
+            this.initialized = true;
             return;
         }
         

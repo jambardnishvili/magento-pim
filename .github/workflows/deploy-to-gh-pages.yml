@@ -20,11 +20,17 @@ jobs:
       - name: Install dependencies
         run: npm ci # or yarn install
 
+      - name: Install cross-env
+        run: npm install -g cross-env
+
       - name: Build application
-        run: npm run build # or yarn build
+        run: npm run build:gh-pages # Use the specialized build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Copy config.js to dist
+        run: cp public/config.js dist/
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4

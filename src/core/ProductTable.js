@@ -1,7 +1,46 @@
 /**
  * ProductTable class - Manages the Tabulator instance
  */
-import { TabulatorFull as Tabulator } from 'tabulator-tables';
+
+// Try to import Tabulator but have a fallback mechanism
+let Tabulator;
+
+try {
+    // First try to import from the module
+    // This should work in development and correctly bundled builds
+    const module = await import('tabulator-tables');
+    Tabulator = module.TabulatorFull;
+} catch (e) {
+    console.warn('Error importing Tabulator as module:', e);
+    
+    // Fallback to window global Tabulator if available (loaded from CDN)
+    if (window.Tabulator) {
+        console.log('Using global Tabulator from CDN');
+        Tabulator = window.Tabulator;
+    } else if (window.TabulatorFull) {
+        console.log('Using global TabulatorFull from CDN');
+        Tabulator = window.TabulatorFull;
+    } else {
+        console.error('Tabulator not available as module or global!');
+        // Create a placeholder function that will show an error message
+        Tabulator = function(selector, options) {
+            document.querySelector(selector).innerHTML = 
+                `<div class="alert alert-danger m-3">
+                    Error: Tabulator library could not be loaded. 
+                    Please check your internet connection and try refreshing the page.
+                </div>`;
+            
+            // Return minimal API to prevent errors
+            return {
+                on: () => {},
+                setFilter: () => {},
+                clearHeaderFilter: () => {},
+                clearFilter: () => {},
+                redraw: () => {}
+            };
+        };
+    }
+}
 
 export class ProductTable {
     /**

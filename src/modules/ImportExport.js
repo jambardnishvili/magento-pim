@@ -2,8 +2,33 @@
  * Import/Export module for handling data import and export
  */
 import { BaseModule } from '../core/BaseModule.js';
-import Papa from 'papaparse';
 import { transformMagentoData } from '../utils/DataTransformer.js';
+
+// Try to import PapaParse but have a fallback mechanism
+let Papa;
+
+try {
+    // First try to import from the module
+    const module = await import('papaparse');
+    Papa = module.default;
+} catch (e) {
+    console.warn('Error importing PapaParse as module:', e);
+    
+    // Fallback to window global Papa if available (loaded from CDN)
+    if (window.Papa) {
+        console.log('Using global Papa from CDN');
+        Papa = window.Papa;
+    } else {
+        console.error('PapaParse not available as module or global!');
+        // Create a placeholder object that won't break the app
+        Papa = {
+            parse: function() {
+                alert('CSV parsing is not available. Please check your internet connection and refresh the page.');
+                return { data: [], errors: [{message: 'CSV parsing library not available'}] };
+            }
+        };
+    }
+}
 
 export class ImportExport extends BaseModule {
     constructor(productTable) {
@@ -19,7 +44,7 @@ export class ImportExport extends BaseModule {
         
         // Get reference to the SupabaseModule
         this.supabaseModule = this.productTable.getModuleByName('SupabaseModule');
-        
+
         // Setup export functionality
         this._setupExport();
         
