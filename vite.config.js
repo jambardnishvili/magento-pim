@@ -12,5 +12,11 @@ export default defineConfig({
     },
     server: {
         open: true
+    },
+    base: './',
+    resolve: {
+        alias: {
+            'tabulator-tables': 'tabulator-tables/dist/js/tabulator.min.js',
+        },
     }
 })
