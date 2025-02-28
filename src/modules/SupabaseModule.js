@@ -25,12 +25,13 @@ export class SupabaseModule extends BaseModule {
     init() {
         if (this.initialized) return;
         
-        // Get configuration from environment or settings
-        this.supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        this.supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        // Get configuration from environment, window globals, or settings
+        this.supabaseUrl = import.meta.env.VITE_SUPABASE_URL || window.SUPABASE_URL;
+        this.supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY;
         
         if (!this.supabaseUrl || !this.supabaseKey) {
-            console.error("Supabase configuration missing. Make sure to set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.");
+            console.error("Supabase configuration missing. Make sure to set SUPABASE_URL and SUPABASE_ANON_KEY in your configuration.");
+            this._updateConnectionStatus(false, "Configuration Missing");
             return;
         }
         
@@ -54,14 +55,7 @@ export class SupabaseModule extends BaseModule {
             this.isConnected = true;
             
             // Update database status indicator
-            const dbStatusText = document.getElementById("db-status-text");
-            const dbStatusBtn = document.getElementById("db-status");
-            
-            if (dbStatusText && dbStatusBtn) {
-                dbStatusText.textContent = "Connected";
-                dbStatusBtn.classList.remove("btn-outline-secondary");
-                dbStatusBtn.classList.add("btn-success");
-            }
+            this._updateConnectionStatus(true, "Connected");
             
             // Load initial data
             this.loadData();
@@ -70,14 +64,24 @@ export class SupabaseModule extends BaseModule {
             this.isConnected = false;
             
             // Update database status indicator
-            const dbStatusText = document.getElementById("db-status-text");
-            const dbStatusBtn = document.getElementById("db-status");
-            
-            if (dbStatusText && dbStatusBtn) {
-                dbStatusText.textContent = "Connection Failed";
-                dbStatusBtn.classList.remove("btn-outline-secondary");
-                dbStatusBtn.classList.add("btn-danger");
-            }
+            this._updateConnectionStatus(false, "Connection Failed");
+        }
+    }
+    
+    /**
+     * Update connection status UI
+     * @private
+     * @param {boolean} connected - Connection status
+     * @param {string} message - Status message to display
+     */
+    _updateConnectionStatus(connected, message) {
+        const dbStatusText = document.getElementById("db-status-text");
+        const dbStatusBtn = document.getElementById("db-status");
+        
+        if (dbStatusText && dbStatusBtn) {
+            dbStatusText.textContent = message;
+            dbStatusBtn.classList.remove("btn-outline-secondary", "btn-success", "btn-danger");
+            dbStatusBtn.classList.add(connected ? "btn-success" : "btn-danger");
         }
     }
     

@@ -1,20 +1,22 @@
 {
   "name": "magento-pim",
   "version": "1.0.0",
-  "description": "Data Grid implementation for Magento 2 configurable/bundle products using AG-Grid React",
+  "description": "Product Information Management for Magento",
   "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.1",
-    "papaparse": "^5.5.2",
-    "tabulator-tables": "^6.3.1"
+    "@supabase/supabase-js": "^2.21.0",
+    "papaparse": "^5.4.1",
+    "tabulator-tables": "^5.4.4"
   },
   "devDependencies": {
-    "vite": "^6.2.0"
+    "gh-pages": "^5.0.0",
+    "vite": "^4.3.9"
   }
 }
