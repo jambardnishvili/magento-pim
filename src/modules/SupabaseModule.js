@@ -66,9 +66,12 @@ export class SupabaseModule extends BaseModule {
             return;
         }
         
+        // Safe access to environment variables
+        const env = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
+        
         // Get configuration from environment, window globals, or settings
-        this.supabaseUrl = import.meta.env.VITE_SUPABASE_URL || window.SUPABASE_URL;
-        this.supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY;
+        this.supabaseUrl = (env.VITE_SUPABASE_URL) || window.SUPABASE_URL;
+        this.supabaseKey = (env.VITE_SUPABASE_ANON_KEY) || window.SUPABASE_ANON_KEY;
         
         if (!this.supabaseUrl || !this.supabaseKey) {
             console.error("Supabase configuration missing. Make sure to set SUPABASE_URL and SUPABASE_ANON_KEY in your configuration.");

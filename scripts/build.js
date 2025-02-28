@@ -45,6 +45,11 @@ function createFallbackScript() {
   window.moduleLoadError = false;
   window.appInitialized = false;
 
+  // Ensure Supabase config exists
+  window.SUPABASE_URL = window.SUPABASE_URL || null;
+  window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || null;
+  window.ENABLE_SUPABASE = window.ENABLE_SUPABASE !== undefined ? window.ENABLE_SUPABASE : false;
+
   // Detect module resolution errors
   window.addEventListener('error', function(event) {
     if (event.message && event.message.includes('Failed to resolve module specifier')) {
@@ -89,7 +94,20 @@ function createFallbackScript() {
             console.error('initializeApp function not found, loading app script again');
             const appScript = document.createElement('script');
             appScript.type = 'module';
-            appScript.src = './assets/index-[hash].js'; // Vite adds hash to filename
+            
+            // Try to find the main JS file with hash
+            const files = document.querySelectorAll('script');
+            let mainScriptSrc = null;
+            
+            for (let i = 0; i < files.length; i++) {
+              const src = files[i].getAttribute('src');
+              if (src && src.includes('index-') && src.includes('.js')) {
+                mainScriptSrc = src;
+                break;
+              }
+            }
+            
+            appScript.src = mainScriptSrc || './assets/index.js';
             document.body.appendChild(appScript);
           }
         }, 100);
@@ -154,23 +172,70 @@ function updateIndexHtml() {
     if (fs.existsSync(indexPath)) {
       let indexContent = fs.readFileSync(indexPath, 'utf8');
       
-      // Check if we need to add the fallback script
+      // Add fallback.js before the first script if needed
       if (!indexContent.includes('fallback.js')) {
-        // Add fallback.js before the first script
         indexContent = indexContent.replace('<script', '<script src="./fallback.js"></script>\n<script');
-        
-        // Update the config.js path if it exists
-        indexContent = indexContent.replace('./public/config.js', './config.js');
-        
-        // Make sure we have the necessary CSS
-        if (!indexContent.includes('bootstrap-icons.css') && indexContent.includes('<head>')) {
-          const bootstrapIconsLink = '\n<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">';
-          indexContent = indexContent.replace('</head>', `${bootstrapIconsLink}\n</head>`);
-        }
-        
-        fs.writeFileSync(indexPath, indexContent);
-        console.log('✅ Updated index.html to include fallback script');
       }
+      
+      // Make sure we have the necessary CSS
+      if (!indexContent.includes('bootstrap-icons.css') && indexContent.includes('<head>')) {
+        const bootstrapIconsLink = '\n<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">';
+        indexContent = indexContent.replace('</head>', `${bootstrapIconsLink}\n</head>`);
+      }
+      
+      // Replace the static config script with a dynamic loader
+      const configLoader = `
+    <!-- Load configuration before app scripts - try both paths -->
+    <script>
+        // Dynamically load the config.js file from the correct location
+        (function() {
+            function loadConfig(path, onSuccess, onError) {
+                const script = document.createElement('script');
+                script.src = path;
+                script.onload = onSuccess;
+                script.onerror = onError;
+                document.head.appendChild(script);
+            }
+
+            // First try to load from ./config.js (GitHub Pages build path)
+            loadConfig('./config.js', 
+                () => console.log('Loaded config from ./config.js'),
+                () => {
+                    console.log('Falling back to ./public/config.js');
+                    // If that fails, try to load from ./public/config.js (local dev path)
+                    loadConfig('./public/config.js',
+                        () => console.log('Loaded config from ./public/config.js'),
+                        () => {
+                            console.error('Failed to load config.js from either location');
+                            // Set default values to prevent errors
+                            window.SUPABASE_URL = null;
+                            window.SUPABASE_ANON_KEY = null;
+                            window.ENABLE_SUPABASE = false;
+                        }
+                    );
+                }
+            );
+        })();
+    </script>`;
+      
+      // Replace any existing config script
+      if (indexContent.includes('<script src="./public/config.js">') || 
+          indexContent.includes('<script src="./config.js">')) {
+        // Replace existing script tags for config
+        indexContent = indexContent.replace(
+          /<script src=["']\.\/(?:public\/)?config\.js["']><\/script>/,
+          configLoader
+        );
+      } else if (indexContent.includes('<head>')) {
+        // Add after head if no config script is found
+        indexContent = indexContent.replace(
+          '<head>',
+          '<head>\n' + configLoader
+        );
+      }
+      
+      fs.writeFileSync(indexPath, indexContent);
+      console.log('✅ Updated index.html with dynamic config loader and fallback script');
     } else {
       console.error('❌ Error: index.html not found in dist directory');
     }
