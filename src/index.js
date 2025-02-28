@@ -16,8 +16,6 @@ function initializeBootstrapComponents() {
 
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("DOM fully loaded, initializing application...");
-    
     try {
         // Initialize Bootstrap components
         initializeBootstrapComponents();

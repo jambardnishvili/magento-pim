@@ -50,7 +50,6 @@ export class SupabaseModule extends BaseModule {
     _initClient() {
         try {
             this.supabase = createClient(this.supabaseUrl, this.supabaseKey);
-            console.log("Supabase client initialized");
             this.isConnected = true;
             
             // Update database status indicator
@@ -125,8 +124,7 @@ export class SupabaseModule extends BaseModule {
         
         try {
             this.isSyncing = true;
-            console.log("Loading data from Supabase...");
-            
+
             // Fetch all products
             const { data, error } = await this.supabase
                 .from(this.tableName)
@@ -139,8 +137,7 @@ export class SupabaseModule extends BaseModule {
             
             // Update the table with loaded data
             await this.table.setData(processedData);
-            console.log(`Loaded ${processedData.length} products from Supabase`);
-            
+
             return processedData;
         } catch (error) {
             console.error("Error loading data from Supabase:", error);

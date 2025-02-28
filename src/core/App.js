@@ -22,19 +22,8 @@ export class App {
             movableColumns: true,
             index: "id",
             debugInvalidOptions: true,
-            rowHeader: {
-                formatter: "rowSelection",
-                titleFormatter: "rowSelection",
-                headerSort: false,
-                resizable: false,
-                hozAlign: "center",
-                frozen: true,
-                width: 60,
-                cssClass: "row-selection-column"
-            },
             columns: columnDefinitions,
             headerFilterLiveFilterDelay: 300,
-            headerFilterPlaceholder: "Filter...",
             rowContextMenu: [
                 {
                     label: "Add Child Product",
@@ -81,8 +70,6 @@ export class App {
      * Initialize the application
      */
     init() {
-        console.log("Initializing application...");
-        
         try {
             // Create and initialize the ProductTable
             this.productTable = new ProductTable("#example-table", this.tableOptions);
@@ -90,14 +77,6 @@ export class App {
             
             // Initialize modules
             this._initModules();
-            
-            // Setup global search
-            this.productTable.setupSearch("#search-input");
-            
-            // Setup clear filters button
-            this._setupClearFilters();
-            
-            console.log("Application initialized successfully");
         } catch (error) {
             console.error("Error initializing application:", error);
             throw error;
@@ -125,23 +104,4 @@ export class App {
             .registerModule(this.supabaseModule)
             .initModules();
     }
-    
-    /**
-     * Setup clear filters button
-     * @private
-     */
-    _setupClearFilters() {
-        const clearFiltersBtn = document.getElementById("clear-filters");
-        if (!clearFiltersBtn) {
-            console.warn("Clear filters button not found in the DOM. Make sure it exists with id 'clear-filters'");
-            return;
-        }
-        
-        clearFiltersBtn.addEventListener("click", () => {
-            this.productTable.getTable().clearHeaderFilter();
-            const searchInput = document.getElementById("search-input");
-            if (searchInput) searchInput.value = "";
-            this.productTable.getTable().clearFilter();
-        });
-    }
-} 
+}

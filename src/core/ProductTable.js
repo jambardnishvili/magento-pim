@@ -20,14 +20,10 @@ export class ProductTable {
      */
     init() {
         try {
-            console.log("Initializing ProductTable...");
             this.table = new Tabulator(this.selector, this.options);
             
             // Add table instance to window for debugging
             window.table = this.table;
-            
-            // Setup basic table event handlers
-            this._setupTableEvents();
             
             return this.table;
         } catch (error) {
@@ -48,10 +44,6 @@ export class ProductTable {
             console.warn("Attempted to register null or undefined module");
             return this;
         }
-        
-        // Get module name from its constructor
-        const moduleName = module.constructor.name;
-        console.log(`Registering module: ${moduleName}`);
         
         this.modules.push(module);
         return this;
@@ -75,71 +67,6 @@ export class ProductTable {
      */
     getTable() {
         return this.table;
-    }
-    
-    /**
-     * Setup basic table event handlers
-     * @private
-     */
-    _setupTableEvents() {
-        this.table.on("tableBuilt", () => {
-            console.log("Table built successfully");
-            
-            // Force a redraw after a short delay
-            setTimeout(() => {
-                this.table.redraw(true);
-                console.log("Forced table redraw");
-            }, 500);
-        });
-        
-        this.table.on("renderStarted", () => {
-            console.log("Table render started");
-        });
-        
-        this.table.on("renderComplete", () => {
-            console.log("Table render complete");
-        });
-        
-        // Add event listeners for data changes
-        this.table.on("cellEdited", (cell) => {
-            const row = cell.getRow();
-            const data = row.getData();
-            console.log("Data updated:", data);
-            // Here you would typically make an API call to update the Magento backend
-        });
-    }
-    
-    /**
-     * Add search filter functionality
-     * @param {string} inputSelector - CSS selector for search input
-     */
-    setupSearch(inputSelector) {
-        document.querySelector(inputSelector).addEventListener("keyup", (e) => {
-            const value = e.target.value;
-            this.table.setFilter(this._customFilterFunction, {value: value});
-        });
-    }
-    
-    /**
-     * Custom filter function for global search
-     * @private
-     */
-    _customFilterFunction(data, params) {
-        if (!params.value) return true;
-        
-        const searchTerm = params.value.toLowerCase();
-        
-        // Search across all data properties
-        for (let key in data) {
-            if (typeof data[key] === "string" && data[key].toLowerCase().includes(searchTerm)) {
-                return true;
-            }
-            if (typeof data[key] === "number" && data[key].toString().includes(searchTerm)) {
-                return true;
-            }
-        }
-        
-        return false;
     }
     
     /**
